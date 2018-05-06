@@ -7,6 +7,11 @@ android_binary(
     srcs = glob(["java/**/*.java"]),
     assets = [
         "//tensorflow/contrib/lite/java/demo/app/src/main/assets:labels_mobilenet_quant_v1_224.txt",
+        "//tensorflow/contrib/lite/java/demo/app/src/main/assets:inceptionv3_slim_2016.tflite",
+        "//tensorflow/contrib/lite/java/demo/app/src/main/assets:imagenet_slim_labels.txt",
+        "//tensorflow/contrib/lite/java/demo/app/src/main/assets:labels_imagenet_slim.txt",
+        "//tensorflow/contrib/lite/java/demo/app/src/main/assets:InceptionV3.cambricon",
+        "//tensorflow/contrib/lite/java/demo/app/src/main/assets:labels_inceptionV3_cambricon.txt",
         "@tflite_mobilenet//:mobilenet_quant_v1_224.tflite",
     ],
     assets_dir = "",
@@ -22,6 +27,7 @@ android_binary(
     tags = ["manual"],
     deps = [
         "//tensorflow/contrib/lite/java:tensorflowlite",
+        "//tensorflow/contrib/lite/java/src/main/libs:libhiai",
         "//tensorflow/contrib/lite/java/src/testhelper/java/org/tensorflow/lite:testhelper",
         "@androidsdk//com.android.support:support-v13-25.2.0",
         "@androidsdk//com.android.support:support-v4-25.2.0",

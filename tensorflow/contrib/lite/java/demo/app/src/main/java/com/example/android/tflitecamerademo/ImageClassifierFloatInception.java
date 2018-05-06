@@ -16,7 +16,7 @@ limitations under the License.
 package com.example.android.tflitecamerademo;
 
 import android.app.Activity;
-
+import android.graphics.Bitmap;
 import java.io.IOException;
 
 /**
@@ -99,7 +99,12 @@ public class ImageClassifierFloatInception extends ImageClassifier {
   }
 
   @Override
-  protected void runInference() {
+  protected void runInference(Bitmap bitmap) {
     tflite.run(imgData, labelProbArray);
+  }
+
+  @Override
+  protected String getModelName() {
+    return "Float";
   }
 }

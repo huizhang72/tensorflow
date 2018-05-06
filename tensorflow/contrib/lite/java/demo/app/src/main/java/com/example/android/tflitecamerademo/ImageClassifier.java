@@ -114,7 +114,7 @@ public abstract class ImageClassifier {
     convertBitmapToByteBuffer(bitmap);
     // Here's where the magic happens!!!
     long startTime = SystemClock.uptimeMillis();
-    runInference();
+    runInference(bitmap);
     long endTime = SystemClock.uptimeMillis();
     Log.d(TAG, "Timecost to run model inference: " + Long.toString(endTime - startTime));
 
@@ -315,7 +315,10 @@ public abstract class ImageClassifier {
    * <p>This additional method is necessary, because we don't have a common base for different
    * primitive data types.
    */
-  protected abstract void runInference();
+  protected abstract void runInference(Bitmap bitmap);
+
+  /** Returns model name. */
+  protected abstract String getModelName();
 
   /**
    * Get the total number of labels.

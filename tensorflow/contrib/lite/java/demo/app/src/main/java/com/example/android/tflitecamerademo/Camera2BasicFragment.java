@@ -51,7 +51,9 @@ import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.util.Size;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -82,6 +84,8 @@ public class Camera2BasicFragment extends Fragment
   private static final String HANDLE_THREAD_NAME = "CameraBackground";
 
   private static final int PERMISSIONS_REQUEST_CODE = 1;
+
+  private static int count = 9999;
 
   private final Object lock = new Object();
   private boolean runClassifier = false;
@@ -122,6 +126,68 @@ public class Camera2BasicFragment extends Fragment
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture texture) {}
       };
+
+
+  private final GestureDetector gesture = new GestureDetector(
+      getActivity(), new GestureDetector.SimpleOnGestureListener() {
+          @Override
+          public boolean onDown(MotionEvent e) {
+            return true;
+          }
+
+          @Override
+          public boolean onFling(MotionEvent e1,
+                                 MotionEvent e2,
+                                 float velocityX,
+                                 float velocityY) {
+            Log.i(TAG, "onFling has been called!");
+            final int SWIPE_MIN_DISTANCE = 120;
+            final int SWIPE_MAX_OFF_PATH = 250;
+            final int SWIPE_THRESHOLD_VELOCITY = 200;
+            try {
+              if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
+                return false;
+              if (e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE
+                  && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                Log.i(TAG, "Right to Left");
+                changeClassifier(-1);
+              } else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE
+                         && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                Log.i(TAG, "Left to Right");
+                changeClassifier(1);
+              }
+            } catch (Exception e) {
+              Log.i(TAG, "onFling " + e);
+            }
+            return super.onFling(e1, e2, velocityX, velocityY);
+          }
+        });
+
+  private void changeClassifier(int direction) {
+    if (classifier != null) {
+      stopBackgroundThread();
+      classifier.close();
+      classifier = null;
+    }
+
+    count = count + direction;
+    int c = count % 3;
+    try {
+      if (c == 0) {
+        classifier = new ImageClassifierQuantizedMobileNet(getActivity());
+        textView.setBackgroundColor(0xFF00FF00);
+      } else if (c == 1) {
+        classifier = new ImageClassifierFloatInception(getActivity());
+        textView.setBackgroundColor(0xFFFF0000);
+      } else if (c == 2) {
+        classifier = new ImageClassifierNpuInception(getActivity());
+        textView.setBackgroundColor(0xFF0000FF);
+      }
+    } catch (IOException e) {
+      Log.e(TAG, "Failed to initialize an image classifier.", e);
+    }
+    startBackgroundThread();
+  }
 
   /** ID of the current {@link CameraDevice}. */
   private String cameraId;
@@ -295,7 +361,17 @@ public class Camera2BasicFragment extends Fragment
   @Override
   public View onCreateView(
       LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    return inflater.inflate(R.layout.fragment_camera2_basic, container, false);
+
+    View view = inflater.inflate(R.layout.fragment_camera2_basic, container, false);
+
+    view.setOnTouchListener(new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+          return gesture.onTouchEvent(event);
+        }
+      });
+
+    return view;
   }
 
   /** Connect the buttons to their event handler. */
@@ -330,6 +406,7 @@ public class Camera2BasicFragment extends Fragment
     try {
       // create either a new ImageClassifierQuantizedMobileNet or an ImageClassifierFloatInception
       classifier = new ImageClassifierQuantizedMobileNet(getActivity());
+      textView.setBackgroundColor(0x00FF00);
     } catch (IOException e) {
       Log.e(TAG, "Failed to initialize an image classifier.", e);
     }
